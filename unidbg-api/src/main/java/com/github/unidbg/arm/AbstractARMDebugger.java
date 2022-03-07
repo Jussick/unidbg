@@ -604,6 +604,10 @@ public abstract class AbstractARMDebugger implements Debugger {
             emulator.getBackend().hook_add_new((ReadHook) traceRead, begin, end, emulator);
             return false;
         }
+        if (line.startsWith("trace")) {
+            File dir = new File("target");
+            dir.mkdir();
+        }
         if (line.startsWith("traceWrite")) { // start trace memory write
             Pattern pattern = Pattern.compile("traceWrite\\s+(\\w+)\\s+(\\w+)");
             Matcher matcher = pattern.matcher(line);
