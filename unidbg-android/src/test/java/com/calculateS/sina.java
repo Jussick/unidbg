@@ -83,8 +83,6 @@ public class sina extends BaseApp {
             public void preCall(Emulator<?> emulator, HookZzArm32RegisterContext ctx, HookEntryInfo info) {
                 Pointer input = ctx.getPointerArg(0);
                 Inspector.inspect(input.getByteArray(0, 34), "arg1");
-                trace(module.base, module.base + module.size);
-                breakPoint(ctx.getLRPointer().peer - module.base);
             }
             @Override
             public void postCall(Emulator<?> emulator, HookZzArm32RegisterContext ctx, HookEntryInfo info) {
