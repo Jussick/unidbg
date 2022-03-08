@@ -57,28 +57,15 @@ public class sina extends BaseApp {
 
     public void patchVerify(){
         int patchCode = 0x4FF00100; //
-        emulator.getMemory().pointer(module.base + 0x1E86).setInt(0,patchCode);
+        patch(0x1E86, patchCode, new byte[]{ (byte)0xFF, (byte) 0xF7, (byte) 0xEB, (byte) 0xFE });
     }
 
     public void patchVerify1(){
-        Pointer pointer = UnidbgPointer.pointer(emulator, module.base + 0x1E86);
-        assert pointer != null;
-        byte[] code = pointer.getByteArray(0, 4);
-        if (!Arrays.equals(code, new byte[]{ (byte)0xFF, (byte) 0xF7, (byte) 0xEB, (byte) 0xFE })) { // BL sub_1C60
-            throw new IllegalStateException(Inspector.inspectString(code, "patch32 code=" + Arrays.toString(code)));
-        }
-        try (Keystone keystone = new Keystone(KeystoneArchitecture.Arm, KeystoneMode.ArmThumb)) {
-            KeystoneEncoded encoded = keystone.assemble("mov r0,1");
-            byte[] patch = encoded.getMachineCode();
-            if (patch.length != code.length) {
-                throw new IllegalStateException(Inspector.inspectString(patch, "patch32 length=" + patch.length));
-            }
-            pointer.write(0, patch, 0, patch.length);
-        }
+        patch(0x1E86, "mov r0,1", new byte[]{ (byte)0xFF, (byte) 0xF7, (byte) 0xEB, (byte) 0xFE });
     };
 
     public void hookMDStringold(){
-        lobbyHook(0x1BD0 + 1, new WrapCallback<HookZzArm32RegisterContext>() {
+        hook(0x1BD0 + 1, new WrapCallback<HookZzArm32RegisterContext>() {
             @Override
             public void preCall(Emulator<?> emulator, HookZzArm32RegisterContext ctx, HookEntryInfo info) {
                 Pointer input = ctx.getPointerArg(0);
@@ -93,12 +80,12 @@ public class sina extends BaseApp {
     }
 
     public void hookMDString(){
-        unidbgHook(module.base + 0x1BD0, new BreakPointCallback() {
+        hook(module.base + 0x1BD0, new BreakPointCallback() {
             @Override
             public boolean onHit(Emulator<?> emulator, long address) {
                 RegisterContext context = emulator.getContext();
                 final TraceHook th = trace(0, module.size);
-                unidbgHook(context.getLRPointer().peer, new BreakPointCallback() {
+                hook(context.getLRPointer().peer, new BreakPointCallback() {
                     @Override
                     public boolean onHit(Emulator<?> emulator, long address) {
                         if (th != null){
@@ -114,11 +101,11 @@ public class sina extends BaseApp {
     }
 
     public void hook1C60(){
-        unidbgHook(module.base + 0x1C60, new BreakPointCallback() {
+        hook(module.base + 0x1C60, new BreakPointCallback() {
             @Override
             public boolean onHit(Emulator<?> emulator, long address) {
                 RegisterContext context = emulator.getContext();
-                unidbgHook(context.getLRPointer().peer, new BreakPointCallback() {
+                hook(context.getLRPointer().peer, new BreakPointCallback() {
                     @Override
                     public boolean onHit(Emulator<?> emulator, long address) {
                         hookMDString();

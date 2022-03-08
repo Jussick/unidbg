@@ -66,7 +66,7 @@ public class oasis extends BaseApp {
     }
 
     public void hookMd5Update(){
-        unidbgHook(module.base + 0x8AB2 + 1, new BreakPointCallback() {
+        hook(module.base + 0x8AB2 + 1, new BreakPointCallback() {
             @Override
             public boolean onHit(Emulator<?> emulator, long address) {
                 RegisterContext context = emulator.getContext();
@@ -75,7 +75,7 @@ public class oasis extends BaseApp {
 
                 Inspector.inspect(input.getByteArray(0, length), "arg1");
                 // OnLeave
-                unidbgHook(context.getLRPointer().peer, new BreakPointCallback() {
+                hook(context.getLRPointer().peer, new BreakPointCallback() {
                     @Override
                     public boolean onHit(Emulator<?> emulator, long address) {
                         return true;
@@ -84,6 +84,5 @@ public class oasis extends BaseApp {
                 return true;
             }
         });
-        //trace(module.base, module.base+module.size);
     }
 }

@@ -606,7 +606,9 @@ public abstract class AbstractARMDebugger implements Debugger {
         }
         if (line.startsWith("trace")) {
             File dir = new File("target");
-            dir.mkdir();
+            if (!dir.exists()){
+                dir.mkdir();
+            }
         }
         if (line.startsWith("traceWrite")) { // start trace memory write
             Pattern pattern = Pattern.compile("traceWrite\\s+(\\w+)\\s+(\\w+)");

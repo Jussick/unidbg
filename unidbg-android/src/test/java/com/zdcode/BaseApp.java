@@ -13,11 +13,19 @@ import com.github.unidbg.linux.android.dvm.AbstractJni;
 import com.github.unidbg.linux.android.dvm.DalvikModule;
 import com.github.unidbg.linux.android.dvm.VM;
 import com.github.unidbg.memory.Memory;
+import com.github.unidbg.pointer.UnidbgPointer;
+import com.github.unidbg.utils.Inspector;
+import com.sun.jna.Pointer;
+import keystone.Keystone;
+import keystone.KeystoneArchitecture;
+import keystone.KeystoneEncoded;
+import keystone.KeystoneMode;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
+import java.util.Arrays;
 
 public class BaseApp extends AbstractJni {
     protected final AndroidEmulator emulator;
@@ -45,20 +53,28 @@ public class BaseApp extends AbstractJni {
         dm.callJNI_OnLoad(emulator); // 调用JNI OnLoad
     }
 
+    @SuppressWarnings("unused")
     protected void breakPoint(long offset){
         emulator.attach().addBreakPoint(module.base + offset);
     }
 
-    protected void unidbgHook(long offset, BreakPointCallback callback){
+    @SuppressWarnings("unused")
+    protected void hook(long offset, BreakPointCallback callback){
         emulator.attach().addBreakPoint(offset, callback);
     }
 
-    protected void lobbyHook(long offset, WrapCallback callback){
+    @SuppressWarnings("unused")
+    protected void hook(long offset, WrapCallback<?> callback){
         IHookZz hookZz = HookZz.getInstance(emulator);
         hookZz.wrap(module.base + offset, callback);
     }
 
+    @SuppressWarnings("unused")
     protected TraceHook trace(long begin, long end){
+        File dir = new File("target");
+        if (!dir.exists()){
+            dir.mkdir();
+        }
         String traceFile = "target/traceCode.txt";
         PrintStream traceStream = null;
         try {
@@ -70,5 +86,34 @@ public class BaseApp extends AbstractJni {
             e.printStackTrace();
         }
         return null;
+    }
+
+    @SuppressWarnings("unused")
+    protected void patch(long offset, String AssemblyCode, byte[] verifyCode){
+        Pointer pointer = UnidbgPointer.pointer(emulator, module.base + offset);
+        assert pointer != null;
+        byte[] code = pointer.getByteArray(0, 4);
+        if (!Arrays.equals(code, verifyCode)) {
+            throw new IllegalStateException(Inspector.inspectString(code, "patch32 code=" + Arrays.toString(code)));
+        }
+        try (Keystone keystone = new Keystone(KeystoneArchitecture.Arm, KeystoneMode.ArmThumb)) {
+            KeystoneEncoded encoded = keystone.assemble(AssemblyCode);
+            byte[] patch = encoded.getMachineCode();
+            if (patch.length != code.length) {
+                throw new IllegalStateException(Inspector.inspectString(patch, "patch32 length=" + patch.length));
+            }
+            pointer.write(0, patch, 0, patch.length);
+        }
+    }
+
+    @SuppressWarnings("unused")
+    protected void patch(long offset, int patchCode, byte[] verifyCode){
+        Pointer pointer = UnidbgPointer.pointer(emulator, module.base + offset);
+        assert pointer != null;
+        byte[] code = pointer.getByteArray(0, 4);
+        if (!Arrays.equals(code, verifyCode)) {
+            throw new IllegalStateException(Inspector.inspectString(code, "patch32 code=" + Arrays.toString(code)));
+        }
+        pointer.setInt(0, patchCode);
     }
 }
