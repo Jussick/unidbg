@@ -2,7 +2,10 @@ package com.calculateS;
 
 // 导入通用且标准的类库
 import com.github.unidbg.Emulator;
+import com.github.unidbg.TraceHook;
 import com.github.unidbg.arm.context.Arm32RegisterContext;
+import com.github.unidbg.arm.context.RegisterContext;
+import com.github.unidbg.debugger.BreakPointCallback;
 import com.github.unidbg.hook.hookzz.*;
 import com.github.unidbg.linux.android.dvm.AbstractJni;
 import com.github.unidbg.AndroidEmulator;
@@ -74,33 +77,69 @@ public class sina extends BaseApp {
         }
     };
 
-    public void HookMDStringold(){
-        // 加载HookZz
-        IHookZz hookZz = HookZz.getInstance(emulator);
-
-        hookZz.wrap(module.base + 0x1BD0 + 1, new WrapCallback<HookZzArm32RegisterContext>() { // inline wrap导出函数
+    public void hookMDStringold(){
+        lobbyHook(0x1BD0 + 1, new WrapCallback<HookZzArm32RegisterContext>() {
             @Override
-            // 类似于 frida onEnter
             public void preCall(Emulator<?> emulator, HookZzArm32RegisterContext ctx, HookEntryInfo info) {
-                // 类似于Frida args[0]
                 Pointer input = ctx.getPointerArg(0);
-                System.out.println("input:" + input.getString(0));
-            };
-
+                Inspector.inspect(input.getByteArray(0, 34), "arg1");
+                trace(module.base, module.base + module.size);
+                breakPoint(ctx.getLRPointer().peer - module.base);
+            }
             @Override
-            // 类似于 frida onLeave
             public void postCall(Emulator<?> emulator, HookZzArm32RegisterContext ctx, HookEntryInfo info) {
                 Pointer result = ctx.getPointerArg(0);
-                System.out.println("input:" + result.getString(0));
+                Inspector.inspect(result.getByteArray(0, 34), "result");
+            }
+        });
+    }
+
+    public void hookMDString(){
+        unidbgHook(module.base + 0x1BD0, new BreakPointCallback() {
+            @Override
+            public boolean onHit(Emulator<?> emulator, long address) {
+                RegisterContext context = emulator.getContext();
+                final TraceHook th = trace(0, module.size);
+                unidbgHook(context.getLRPointer().peer, new BreakPointCallback() {
+                    @Override
+                    public boolean onHit(Emulator<?> emulator, long address) {
+                        if (th != null){
+                            th.stopTrace();
+                            return true;
+                        }
+                        return false;
+                    }
+                });
+                return true;
+            }
+        });
+    }
+
+    public void hook1C60(){
+        unidbgHook(module.base + 0x1C60, new BreakPointCallback() {
+            @Override
+            public boolean onHit(Emulator<?> emulator, long address) {
+                RegisterContext context = emulator.getContext();
+                unidbgHook(context.getLRPointer().peer, new BreakPointCallback() {
+                    @Override
+                    public boolean onHit(Emulator<?> emulator, long address) {
+                        hookMDString();
+                        return true;
+                    }
+                });
+                return true;
             }
         });
     }
 
     public static void main(String[] args) {
         sina test = new sina();
-//        test.patchVerify();
+        //test.patchVerify();
         //test.patchVerify1();
-        //test.HookMDStringold();
+        //test.hookMDStringold();
+        //test.breakPoint(0x1BD0);
+        //test.trace(0x1BD0, 0x1C50);
+        test.hook1C60();
         System.out.println(test.calculateS());
     }
 }

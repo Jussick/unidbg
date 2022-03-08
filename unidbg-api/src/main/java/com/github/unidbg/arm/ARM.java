@@ -1057,7 +1057,9 @@ public class ARM {
         sb.append(space);
         appendHex(sb, ins.getAddress(), 8, '0', false);
         sb.append(":").append(space);
-        sb.append('"').append(ins).append('"');
+        String inss = String.format("\"%s\"", ins);
+        appendHex(sb, inss, 35, ' ', true); //Alignment regs change content
+        //sb.append('"').append(ins).append('"');
 
         capstone.api.arm.OpInfo opInfo = null;
         capstone.api.arm64.OpInfo opInfo64 = null;

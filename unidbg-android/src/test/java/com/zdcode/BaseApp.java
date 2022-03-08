@@ -2,7 +2,11 @@ package com.zdcode;
 
 import com.github.unidbg.AndroidEmulator;
 import com.github.unidbg.Module;
+import com.github.unidbg.TraceHook;
 import com.github.unidbg.debugger.BreakPointCallback;
+import com.github.unidbg.hook.hookzz.HookZz;
+import com.github.unidbg.hook.hookzz.IHookZz;
+import com.github.unidbg.hook.hookzz.WrapCallback;
 import com.github.unidbg.linux.android.AndroidEmulatorBuilder;
 import com.github.unidbg.linux.android.AndroidResolver;
 import com.github.unidbg.linux.android.dvm.AbstractJni;
@@ -25,7 +29,7 @@ public class BaseApp extends AbstractJni {
         // 获取模拟器的内存操作接口
         final Memory memory = emulator.getMemory();
         // 设置系统类库解析
-        memory.setLibraryResolver(new AndroidResolver(23));
+        memory.setLibraryResolver(new AndroidResolver(19));
         // 创建Android虚拟机,传入APK，Unidbg可以替我们做部分签名校验的工作
         vm = emulator.createDalvikVM(new File(apkPath));
         //
@@ -41,22 +45,30 @@ public class BaseApp extends AbstractJni {
         dm.callJNI_OnLoad(emulator); // 调用JNI OnLoad
     }
 
-    protected void breakPoint(long position){
-        emulator.attach().addBreakPoint(position);
+    protected void breakPoint(long offset){
+        emulator.attach().addBreakPoint(module.base + offset);
     }
 
-    protected void hook(Module module, long offset, BreakPointCallback callback){
-        emulator.attach().addBreakPoint(module, offset, callback);
+    protected void unidbgHook(long offset, BreakPointCallback callback){
+        emulator.attach().addBreakPoint(offset, callback);
     }
 
-    protected void trace(long begin, long end){
+    protected void lobbyHook(long offset, WrapCallback callback){
+        IHookZz hookZz = HookZz.getInstance(emulator);
+        hookZz.wrap(module.base + offset, callback);
+    }
+
+    protected TraceHook trace(long begin, long end){
         String traceFile = "target/traceCode.txt";
         PrintStream traceStream = null;
         try {
             traceStream = new PrintStream(new FileOutputStream(traceFile), true);
-            emulator.traceCode(begin, end).setRedirect(traceStream);
+            TraceHook th = emulator.traceCode(module.base + begin, module.base + end);
+            th.setRedirect(traceStream);
+            return th;
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
+        return null;
     }
 }
