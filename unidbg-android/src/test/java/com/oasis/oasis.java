@@ -27,9 +27,11 @@ import java.util.List;
 // 继承AbstractJni类
 public class oasis extends BaseApp {
     oasis() {
-        super("com.sina.oasis",
-                "unidbg-android/src/test/resources/example_binaries/oasis/lvzhou.apk",
-                "unidbg-android/src/test/resources/example_binaries/oasis/liboasiscore.so");
+        super();
+        processName = "com.sina.oasis";
+        apkPath = "unidbg-android/src/test/resources/example_binaries/oasis/lvzhou.apk";
+        soPath = "unidbg-android/src/test/resources/example_binaries/oasis/liboasiscore.so";
+        init();
     };
 
     public static void main(String[] args) {
