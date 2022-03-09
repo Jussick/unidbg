@@ -68,7 +68,8 @@ public class ElfUnpacker {
         });
 
         for (MemRegion region : module.getRegions()) {
-            if ((region.perms & UnicornConst.UC_PROT_WRITE) == 0 && (region.perms & UnicornConst.UC_PROT_EXEC) == UnicornConst.UC_PROT_EXEC) { // 只读代码段
+            //监控.data段，而不是代码段
+            if ((region.perms & UnicornConst.UC_PROT_WRITE) == UnicornConst.UC_PROT_WRITE/*0 && (region.perms & UnicornConst.UC_PROT_EXEC) == UnicornConst.UC_PROT_EXEC*/) { // 只读代码段
                 System.out.println("Begin unpack " + module.name + ": 0x" + Long.toHexString(region.begin) + "-0x" + Long.toHexString(region.end));
                 emulator.getBackend().hook_add_new(new WriteHook() {
                     private UnHook unHook;
