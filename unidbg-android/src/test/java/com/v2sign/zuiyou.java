@@ -22,7 +22,7 @@ public class zuiyou extends BaseApp {
         sdkVersion = 19;
         soPath = "unidbg-android/src/test/resources/example_binaries/v2sign/libnet_crypto.so";
         beginInit();
-        //dumpSo();
+        dumpSo();
         endInit();
     };
 

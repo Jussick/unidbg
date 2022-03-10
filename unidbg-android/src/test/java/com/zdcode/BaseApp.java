@@ -22,10 +22,7 @@ import keystone.KeystoneEncoded;
 import keystone.KeystoneMode;
 import org.apache.commons.io.FileUtils;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.PrintStream;
+import java.io.*;
 import java.util.Arrays;
 
 public class BaseApp extends AbstractJni {
@@ -41,17 +38,23 @@ public class BaseApp extends AbstractJni {
         super();
     }
 
-    protected void dumpSo(){
+    protected void dumpSo() {
         final String soPath = this.soPath;
         memory.addModuleListener(new ModuleListener() {
             @Override
             public void onLoaded(Emulator<?> emulator, Module module) {
-                String soName = soPath.substring(soPath.lastIndexOf("/")+1);
-                if (soName.equals(module.name)) {
-                    File outFile = new File(FileUtils.getUserDirectory(), "Desktop/" + soName.substring(0, soName.indexOf(".")) + "_patched.so");
-                    UnidbgPointer basePointer = UnidbgPointer.pointer(emulator, module.getBaseHeader());
-                    assert basePointer != null;
-                    new ElfUnpacker(basePointer.getByteArray(0, (int)module.size), outFile).register(emulator, module);
+                try{
+                    FileInputStream is = new FileInputStream(new File(soPath));
+                    int size = is.available();
+                    final byte[] elfBytes = new byte[size];
+                    is.read(elfBytes);
+                    String soName = soPath.substring(soPath.lastIndexOf("/")+1);
+                    if (soName.equals(module.name)) {
+                        File outFile = new File(FileUtils.getUserDirectory(), "Desktop/" + soName.substring(0, soName.indexOf(".")) + "_patched.so");
+                        new ElfUnpacker(elfBytes, outFile).register(emulator, module);
+                    }
+                }catch (IOException e){
+                    throw new UnsupportedOperationException(e);
                 }
             }
         });
