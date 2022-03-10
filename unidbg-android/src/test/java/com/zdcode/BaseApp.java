@@ -32,40 +32,46 @@ public class BaseApp extends AbstractJni {
     protected AndroidEmulator emulator;
     protected VM vm;
     protected Module module;
-    protected boolean needDumpSo = false;
+    protected Memory memory;
+    protected String soPath;
     protected String processName;
     protected String apkPath;
-    protected String soPath;
+    protected int sdkVersion;
     protected BaseApp(){
         super();
     }
 
-    protected void init(){
+    protected void dumpSo(){
+        final String soPath = this.soPath;
+        memory.addModuleListener(new ModuleListener() {
+            @Override
+            public void onLoaded(Emulator<?> emulator, Module module) {
+                String soName = soPath.substring(soPath.lastIndexOf("/")+1);
+                if (soName.equals(module.name)) {
+                    File outFile = new File(FileUtils.getUserDirectory(), "Desktop/" + soName.substring(0, soName.indexOf(".")) + "_patched.so");
+                    UnidbgPointer basePointer = UnidbgPointer.pointer(emulator, module.getBaseHeader());
+                    assert basePointer != null;
+                    new ElfUnpacker(basePointer.getByteArray(0, (int)module.size), outFile).register(emulator, module);
+                }
+            }
+        });
+    }
+
+    protected void beginInit(){
         // 创建模拟器实例,进程名建议依照实际进程名填写，可以规避针对进程名的校验
         emulator = AndroidEmulatorBuilder.for32Bit().setProcessName(processName).build();
         // 获取模拟器的内存操作接口
-        final Memory memory = emulator.getMemory();
+        memory = emulator.getMemory();
         // 设置系统类库解析
         memory.setLibraryResolver(new AndroidResolver(19));
         // 创建Android虚拟机,传入APK，Unidbg可以替我们做部分签名校验的工作
         vm = emulator.createDalvikVM(new File(apkPath));
         //
         //vm = emulator.createDalvikVM();
-        if (needDumpSo){
-            memory.addModuleListener(new ModuleListener() {
-                @Override
-                public void onLoaded(Emulator<?> emulator, Module module) {
-                    String soName = soPath.substring(soPath.lastIndexOf("/")+1);
-                    if (soName.equals(module.name)) {
-                        File outFile = new File(FileUtils.getUserDirectory(), "Desktop/" + soName.substring(0, soName.indexOf(".")) + "_patched.so");
-                        UnidbgPointer basePointer = UnidbgPointer.pointer(emulator, module.getBaseHeader());
-                        assert basePointer != null;
-                        new ElfUnpacker(basePointer.getByteArray(0, (int)module.size), outFile).register(emulator, module);
-                    }
-                }
-            });
-        }
         new AndroidModule(emulator, vm).register(memory);
+    }
+
+    protected void endInit(){
         // 加载目标SO
         DalvikModule dm = vm.loadLibrary(new File(soPath), true); // 加载so到虚拟内存
         //获取本SO模块的句柄,后续需要用它

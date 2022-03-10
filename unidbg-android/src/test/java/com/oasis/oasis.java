@@ -31,7 +31,9 @@ public class oasis extends BaseApp {
         processName = "com.sina.oasis";
         apkPath = "unidbg-android/src/test/resources/example_binaries/oasis/lvzhou.apk";
         soPath = "unidbg-android/src/test/resources/example_binaries/oasis/liboasiscore.so";
-        init();
+        sdkVersion = 19;
+        beginInit();
+        endInit();
     };
 
     public static void main(String[] args) {

@@ -1,20 +1,15 @@
 package com.v2sign;
 
 import com.github.unidbg.Emulator;
-import com.github.unidbg.Module;
-import com.github.unidbg.ModuleListener;
 import com.github.unidbg.hook.hookzz.*;
 import com.github.unidbg.linux.android.dvm.*;
 import com.github.unidbg.linux.android.dvm.array.ByteArray;
-import com.github.unidbg.linux.unpack.ElfUnpacker;
 import com.github.unidbg.memory.MemoryBlock;
 import com.github.unidbg.pointer.UnidbgPointer;
 import com.github.unidbg.utils.Inspector;
 import com.sun.jna.Pointer;
 import com.zdcode.BaseApp;
-import org.apache.commons.io.FileUtils;
 
-import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,9 +19,11 @@ public class zuiyou extends BaseApp {
         super();
         processName = "com.xiaochuankeji.tieba";
         apkPath = "unidbg-android/src/test/resources/example_binaries/v2sign/right573.apk";
+        sdkVersion = 19;
         soPath = "unidbg-android/src/test/resources/example_binaries/v2sign/libnet_crypto.so";
-        needDumpSo = true;
-        init();
+        beginInit();
+        //dumpSo();
+        endInit();
     };
 
     public void native_init(){

@@ -26,7 +26,9 @@ public class sina extends BaseApp {
         processName = "com.sina.International";
         apkPath = "unidbg-android/src/test/resources/example_binaries/calculateS/sinaInternational.apk";
         soPath = "unidbg-android/src/test/resources/example_binaries/calculateS/libutility.so";
-        init();
+        sdkVersion = 19;
+        beginInit();
+        endInit();
     };
 
     @Override
