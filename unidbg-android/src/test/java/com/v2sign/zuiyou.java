@@ -16,14 +16,11 @@ import java.util.List;
 
 public class zuiyou extends BaseApp {
     zuiyou() {
-        super();
-        processName = "com.xiaochuankeji.tieba";
-        apkPath = "unidbg-android/src/test/resources/example_binaries/v2sign/right573.apk";
-        sdkVersion = 19;
-        soPath = "unidbg-android/src/test/resources/example_binaries/v2sign/libnet_crypto.so";
-        beginInit();
-        dumpSo();
-        endInit();
+        super("com.xiaochuankeji.tieba",
+                "unidbg-android/src/test/resources/example_binaries/v2sign/right573.apk",
+                "unidbg-android/src/test/resources/example_binaries/v2sign/libnet_crypto.so",
+                19);
+        init().dump().build();
     };
 
     public void native_init(){

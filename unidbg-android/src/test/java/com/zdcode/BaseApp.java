@@ -30,16 +30,20 @@ public class BaseApp extends AbstractJni {
     protected VM vm;
     protected Module module;
     protected Memory memory;
-    protected String soPath;
-    protected String processName;
-    protected String apkPath;
-    protected int sdkVersion;
-    protected BaseApp(){
+    private final String soPath;
+    private final String processName;
+    private final String apkPath;
+    private final int sdkVersion;
+
+    public BaseApp(String processName, String apkPath, String soPath, int sdkVersion){
         super();
+        this.processName = processName;
+        this.apkPath = apkPath;
+        this.soPath = soPath;
+        this.sdkVersion = sdkVersion;
     }
 
-    protected void dumpSo() {
-        final String soPath = this.soPath;
+    public BaseApp dump() {
         memory.addModuleListener(new ModuleListener() {
             @Override
             public void onLoaded(Emulator<?> emulator, Module module) {
@@ -47,7 +51,10 @@ public class BaseApp extends AbstractJni {
                     FileInputStream is = new FileInputStream(new File(soPath));
                     int size = is.available();
                     final byte[] elfBytes = new byte[size];
-                    is.read(elfBytes);
+                    int len = is.read(elfBytes);
+                    if (size != len){
+                        throw new UnsupportedOperationException("elf file read incomplete");
+                    }
                     String soName = soPath.substring(soPath.lastIndexOf("/")+1);
                     if (soName.equals(module.name)) {
                         File outFile = new File(FileUtils.getUserDirectory(), "Desktop/" + soName.substring(0, soName.indexOf(".")) + "_patched.so");
@@ -58,23 +65,25 @@ public class BaseApp extends AbstractJni {
                 }
             }
         });
+        return this;
     }
 
-    protected void beginInit(){
+    public BaseApp init(){
         // 创建模拟器实例,进程名建议依照实际进程名填写，可以规避针对进程名的校验
         emulator = AndroidEmulatorBuilder.for32Bit().setProcessName(processName).build();
         // 获取模拟器的内存操作接口
         memory = emulator.getMemory();
         // 设置系统类库解析
-        memory.setLibraryResolver(new AndroidResolver(19));
+        memory.setLibraryResolver(new AndroidResolver(sdkVersion));
         // 创建Android虚拟机,传入APK，Unidbg可以替我们做部分签名校验的工作
         vm = emulator.createDalvikVM(new File(apkPath));
         //
         //vm = emulator.createDalvikVM();
         new AndroidModule(emulator, vm).register(memory);
+        return this;
     }
 
-    protected void endInit(){
+    public BaseApp build(){
         // 加载目标SO
         DalvikModule dm = vm.loadLibrary(new File(soPath), true); // 加载so到虚拟内存
         //获取本SO模块的句柄,后续需要用它
@@ -83,26 +92,27 @@ public class BaseApp extends AbstractJni {
         vm.setVerbose(true); // 打印日志
 
         dm.callJNI_OnLoad(emulator); // 调用JNI OnLoad
+        return this;
     }
 
     @SuppressWarnings("unused")
-    protected void breakPoint(long offset){
+    public void breakPoint(long offset){
         emulator.attach().addBreakPoint(module.base + offset);
     }
 
     @SuppressWarnings("unused")
-    protected void hook(long offset, BreakPointCallback callback){
+    public void hook(long offset, BreakPointCallback callback){
         emulator.attach().addBreakPoint(offset, callback);
     }
 
     @SuppressWarnings("unused")
-    protected void hook(long offset, WrapCallback<?> callback){
+    public void hook(long offset, WrapCallback<?> callback){
         IHookZz hookZz = HookZz.getInstance(emulator);
         hookZz.wrap(module.base + offset, callback);
     }
 
     @SuppressWarnings("unused")
-    protected TraceHook trace(long begin, long end){
+    public TraceHook trace(long begin, long end){
         File dir = new File("target");
         if (!dir.exists()){
             dir.mkdir();
@@ -121,7 +131,7 @@ public class BaseApp extends AbstractJni {
     }
 
     @SuppressWarnings("unused")
-    protected void patch(long offset, String AssemblyCode, byte[] verifyCode){
+    public void patch(long offset, String AssemblyCode, byte[] verifyCode){
         Pointer pointer = UnidbgPointer.pointer(emulator, module.base + offset);
         assert pointer != null;
         byte[] code = pointer.getByteArray(0, 4);
@@ -139,7 +149,7 @@ public class BaseApp extends AbstractJni {
     }
 
     @SuppressWarnings("unused")
-    protected void patch(long offset, int patchCode, byte[] verifyCode){
+    public void patch(long offset, int patchCode, byte[] verifyCode){
         Pointer pointer = UnidbgPointer.pointer(emulator, module.base + offset);
         assert pointer != null;
         byte[] code = pointer.getByteArray(0, 4);

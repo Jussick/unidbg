@@ -22,14 +22,12 @@ import java.util.List;
 
 public class sina extends BaseApp {
     sina() {
-        super();
-        processName = "com.sina.International";
-        apkPath = "unidbg-android/src/test/resources/example_binaries/calculateS/sinaInternational.apk";
-        soPath = "unidbg-android/src/test/resources/example_binaries/calculateS/libutility.so";
-        sdkVersion = 19;
-        beginInit();
-        endInit();
-    };
+        super("com.sina.International",
+                "unidbg-android/src/test/resources/example_binaries/calculateS/sinaInternational.apk",
+                "unidbg-android/src/test/resources/example_binaries/calculateS/libutility.so",
+                19);
+        init().build();
+    }
 
     @Override
     public DvmObject<?> callObjectMethod(BaseVM vm, DvmObject<?> dvmObject, String signature, VarArg varArg) {

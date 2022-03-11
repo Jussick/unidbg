@@ -24,6 +24,7 @@ import java.nio.ByteOrder;
  * Then in onLoaded method:
  *     if ("libxxx.so".equals(module.name)) {
  *         File outFile = new File(FileUtils.getUserDirectory(), "Desktop/libxxx_patched.so");
+ *         //libxxxFileData从libxxx.so读取
  *         new ElfUnpacker(libxxxFileData, outFile).register(emulator, module);
  *     }
  * </pre>
