@@ -1,6 +1,8 @@
 package com.v2sign;
 
 import com.github.unidbg.Emulator;
+import com.github.unidbg.arm.context.RegisterContext;
+import com.github.unidbg.debugger.BreakPointCallback;
 import com.github.unidbg.hook.hookzz.*;
 import com.github.unidbg.linux.android.dvm.*;
 import com.github.unidbg.linux.android.dvm.array.ByteArray;
@@ -20,7 +22,7 @@ public class zuiyou extends BaseApp {
                 "unidbg-android/src/test/resources/example_binaries/v2sign/right573.apk",
                 "unidbg-android/src/test/resources/example_binaries/v2sign/libnet_crypto.so",
                 19);
-        init().dump().build();
+        init()/*.dump()*/.build();
     };
 
     public void native_init(){
@@ -59,37 +61,37 @@ public class zuiyou extends BaseApp {
                 return dvmObject.getObjectType();
             }
             case "java/lang/Class->getSimpleName()Ljava/lang/String;":{
-                //return new StringObject(vm, "AppController");
-                return new StringObject(vm, "abc");
+                return new StringObject(vm, "AppController");
             }
-//            case "android/content/Context->getFilesDir()Ljava/io/File;":
-//            case "java/lang/String->getAbsolutePath()Ljava/lang/String;": {
-//                return new StringObject(vm, "/data/user/0/cn.xiaochuankeji.tieba/files");
-//            }
+            case "android/content/Context->getFilesDir()Ljava/io/File;":
+            case "java/lang/String->getAbsolutePath()Ljava/lang/String;": {
+                //return new StringObject(vm, "/data/user/0/cn.xiaochuankeji.tieba/files");
+                return new StringObject(vm, "c:/programfile/files");
+            }
         }
         return super.callObjectMethodV(vm, dvmObject, signature, vaList);
     };
 
-//    @Override
-//    public boolean callStaticBooleanMethodV(BaseVM vm, DvmClass dvmClass, String signature, VaList vaList) {
-//        switch (signature){
-//            case "android/os/Debug->isDebuggerConnected()Z":{
-//                return false;
-//            }
-//        }
-//        throw new UnsupportedOperationException(signature);
-//    }
+    @Override
+    public boolean callStaticBooleanMethodV(BaseVM vm, DvmClass dvmClass, String signature, VaList vaList) {
+        switch (signature){
+            case "android/os/Debug->isDebuggerConnected()Z":{
+                return false;
+            }
+        }
+        throw new UnsupportedOperationException(signature);
+    }
 
-//    @Override
-//    public int callStaticIntMethodV(BaseVM vm, DvmClass dvmClass, String signature, VaList vaList) {
-//        switch (signature){
-//            case "android/os/Process->myPid()I":{
-//                return emulator.getPid();
-//            }
-//
-//        }
-//        throw new UnsupportedOperationException(signature);
-//    }
+    @Override
+    public int callStaticIntMethodV(BaseVM vm, DvmClass dvmClass, String signature, VaList vaList) {
+        switch (signature){
+            case "android/os/Process->myPid()I":{
+                return emulator.getPid();
+            }
+
+        }
+        throw new UnsupportedOperationException(signature);
+    }
 
     public void hook65540(){
         // 加载HookZz
@@ -144,11 +146,34 @@ public class zuiyou extends BaseApp {
         Inspector.inspect(output_buffer.getByteArray(0, 0x10), "output");
     };
 
+    public void hook4E524(){
+        hook(module.base + 0x4E524 + 1, new BreakPointCallback() {
+            @Override
+            public boolean onHit(Emulator<?> emulator, long address) {
+                RegisterContext context = emulator.getContext();
+                final UnidbgPointer arg1 = context.getPointerArg(0);
+                final UnidbgPointer arg2 = context.getPointerArg(1);
+                final UnidbgPointer arg3 = context.getPointerArg(2);
+                final UnidbgPointer arg4 = context.getPointerArg(3);
+                Inspector.inspect("arg1:", arg1.toIntPeer());
+                Inspector.inspect(arg1.getByteArray(0, 100), "arg1");
+                Inspector.inspect("arg2:", arg2.toIntPeer());
+                Inspector.inspect(arg2.getByteArray(0, 100), "arg2");
+                Inspector.inspect("arg3:", arg3.toIntPeer());
+                Inspector.inspect(arg3.getByteArray(0, 100), "arg3");
+                Inspector.inspect("arg4:", arg4.toIntPeer());
+                Inspector.inspect(arg4.getByteArray(0, 100), "arg4");
+                return true;
+            }
+        });
+    }
+
     public static void main(String[] args) throws Exception {
         zuiyou test = new zuiyou();
-//        test.callSign();
+        test.native_init();
+        //test.hook4E524();
+        test.callSign();
 //        test.hook65540();
-//        test.native_init();
 //        System.out.println(test.callSign());
 //        test.callMd5();
     }
