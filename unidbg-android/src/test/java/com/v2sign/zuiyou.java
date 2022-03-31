@@ -65,8 +65,7 @@ public class zuiyou extends BaseApp {
             }
             case "android/content/Context->getFilesDir()Ljava/io/File;":
             case "java/lang/String->getAbsolutePath()Ljava/lang/String;": {
-                //return new StringObject(vm, "/data/user/0/cn.xiaochuankeji.tieba/files");
-                return new StringObject(vm, "c:/programfile/files");
+                return new StringObject(vm, "/data/user/0/cn.xiaochuankeji.tieba/files");
             }
         }
         return super.callObjectMethodV(vm, dvmObject, signature, vaList);
@@ -172,9 +171,9 @@ public class zuiyou extends BaseApp {
         zuiyou test = new zuiyou();
         test.native_init();
         //test.hook4E524();
-        test.callSign();
-//        test.hook65540();
+//        test.callSign();
+        test.hook65540();
 //        System.out.println(test.callSign());
-//        test.callMd5();
+        test.callMd5();
     }
 }

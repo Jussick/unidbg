@@ -22,6 +22,9 @@ import keystone.KeystoneEncoded;
 import keystone.KeystoneMode;
 import org.apache.commons.io.FileUtils;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+
 import java.io.*;
 import java.util.Arrays;
 
@@ -91,6 +94,12 @@ public class BaseApp extends AbstractJni {
         vm.setJni(this); // 设置JNI
         vm.setVerbose(true); // 打印日志
 
+        Logger.getLogger("com.github.unidbg.linux.ARM32SyscallHandler").setLevel(Level.DEBUG);
+        Logger.getLogger("com.github.unidbg.unix.UnixSyscallHandler").setLevel(Level.DEBUG);
+        Logger.getLogger("com.github.unidbg.AbstractEmulator").setLevel(Level.DEBUG);
+        Logger.getLogger("com.github.unidbg.linux.android.dvm.DalvikVM").setLevel(Level.DEBUG);
+        Logger.getLogger("com.github.unidbg.linux.android.dvm.BaseVM").setLevel(Level.DEBUG);
+        Logger.getLogger("com.github.unidbg.linux.android.dvm").setLevel(Level.DEBUG);
         dm.callJNI_OnLoad(emulator); // 调用JNI OnLoad
         return this;
     }

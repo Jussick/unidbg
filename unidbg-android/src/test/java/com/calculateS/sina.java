@@ -46,8 +46,8 @@ public class sina extends BaseApp {
         //so的代码里是通过android/content/ContextWrapper调用的GetMethodID,所以函数被填充到了这个类的函数map中
         DvmObject<?> context = vm.resolveClass("android/content/ContextWrapper").newObject(null);// context
         list.add(vm.addLocalObject(context));
-        list.add(vm.addLocalObject(new StringObject(vm, "A")));
-        list.add(vm.addLocalObject(new StringObject(vm, "")));
+        list.add(vm.addLocalObject(new StringObject(vm, "12345")));
+        list.add(vm.addLocalObject(new StringObject(vm, "r0ysue")));
 
         Number number = module.callFunction(emulator, 0x1E7C + 1, list.toArray());
         String result = vm.getObject(number.intValue()).getValue().toString();
@@ -119,8 +119,9 @@ public class sina extends BaseApp {
     public static void main(String[] args) {
         sina test = new sina();
         //test.patchVerify();
-        test.patchVerify1();
-        test.hookMDStringold();
+        //test.patchVerify1();
+        test.hookMDString();
+        //test.hookMDStringold();
         //test.breakPoint(0x1BD0);
         //test.trace(0x1BD0, 0x1C50);
         //test.hook1C60();
